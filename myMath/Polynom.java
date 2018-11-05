@@ -1,11 +1,12 @@
 package myMath;
-
+import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import myMath.Monom;
 /**
  * This class represents a Polynom with add, multiply functionality, it also should support the following:
@@ -13,363 +14,538 @@ import myMath.Monom;
  * 2. Finding a numerical value between two values (currently support root only f(x)=0).
  * 3. Derivative
  * 
- * @author Boaz
+ * @author Avihu oshri
+ * @author Orel bracha
  *
  */
+
+
+
+
+
 public class Polynom implements Polynom_able
 {
-
 	// ********** add your code below ***********
-	
-	private	ArrayList<Monom> poly = new ArrayList<Monom>() ;
+	private ArrayList<Monom> poly = new ArrayList<Monom>() ;
 	Iterator<Monom> polyIt = poly.iterator()               ;
-	
-	
-	
-	 
-	public Polynom()
+	public Polynom() 
 	{
-		
 	}
-	
+
+	/**
+	 * 
+	 * @param str - The String that we receive here
+	 * @param coefficient_s - this variable holds the String type of X's coefficient
+	 * @param power_s       - this variable holds the String type of X's power
+	 * @param coefficient_d - this variable holds the coefficient of X
+	 * @param power_i       - this variable holds the power of X
+	 * @param index_X       - the index of the closest 'X' sign
+	 * @param index_P       - the index of the closest '^' sign
+	 * @param index_S       - the index of the closest sign ('+' or '-' )
+	 * @param xFound        - A boolean variable that says if there is 'x' or'X' in str
+	 * @param powerFound    - A boolean variable that says if there is '^' in str
+	 * @param mon - Used as a monom which gets new values
+	 */
+	public Polynom(String str) {
+		String coefficient_s ; //this variable holds the String type of X's coefficient
+		String power_s       ; //this variable holds the String type of X's power
+		double coefficient_d ; //this variable holds the coefficient of X
+		int power_i         ;  //this variable holds the power of X
+		int index_X     = 0 ;  //the index of the closest 'X' sign
+		int index_P     = 0 ;  //the index of the closest '^' sign
+		boolean xFound     = false ;
+		boolean powerFound = false ;
+		Monom mon ;
+		str=str.replaceAll(" ", "");
+
+		while(str.length() != 0 )
+		{
+			int index_S;
+			if(str.contains("X") || str.contains("x") ) 
+			{
+				xFound = true ; 
+				if(str.contains("X"))        {index_X = str.indexOf("X");}
+				if(str.contains("x"))        {index_X = str.indexOf("x");}
+				if(str.contains("^"))
+				{
+					if(str.charAt(index_X+1) == '^')
+
+					{
+						powerFound = true ;
+						index_P = str.indexOf("^");
+					}
+				}
+			}
+			if(xFound && !powerFound)  
+			{
+				coefficient_s = str.substring(0, index_X) ;
+				if(index_X == 0)   {coefficient_d= 1 ; }
+				else               {coefficient_d = Double.parseDouble(coefficient_s);}
+				mon = new Monom(coefficient_d , 1);
+				str = str.substring(index_X + 1 );
+				poly.add(mon);
+			}
+			else if(xFound && powerFound)
+			{
+				if(index_X == 0)       {coefficient_d = 1 ;}
+				else                   
+				{
+					coefficient_s = str.substring(0, index_X) ;
+					coefficient_d = Double.parseDouble(coefficient_s);
+				}
+				str = str.substring(index_P   , str.length()) ; 
+				index_P = 0 ;
+				if(str.contains("+") && str.contains("-")) 
+				{
+					int index_plus = str.indexOf("+" ) ; //the index of the closest '+' sign
+					int index_minus = str.indexOf("-") ;
+					if(index_minus < index_plus )         { index_S = index_minus           ;}
+					else                                  {  index_S = index_plus            ;}
+				}
+				else if(str.contains("+") && !str.contains("-")) 
+				{
+					int index_plus = str.indexOf("+" ) ; //the index of the closest '+' sign
+					index_S = index_plus  ;                 
+				}
+				else if(!str.contains("+") && !str.contains("-"))
+				{
+					power_s = str.substring(index_P +1, str.length());
+					power_i = Integer.parseInt(power_s);
+					mon = new Monom (coefficient_d , power_i ) ;
+					poly.add(mon);
+					break ;
+				}
+				else  
+				{
+					index_S = str.indexOf("-" ) ; //the index of the closest '-' sign
+				}
+				power_s = str.substring(index_P +1, index_S);
+				power_i = Integer.parseInt(power_s);
+				str = str.substring(index_S);
+				mon = new Monom(coefficient_d , power_i);
+				poly.add(mon);
+			}
+			else if(!xFound && !powerFound && str.length()>0)
+			{
+				coefficient_d = Double.parseDouble(str);
+				mon = new Monom(coefficient_d , 0);
+				poly.add(mon);
+				break ;
+			}
+			xFound = false ;
+			powerFound = false ;
+
+		}
+	}
+	/**  * Add p1 to this Polynom
+	 * @param p1 - The Polynom that wil be used in order to do the add function
+	 * @param mon1 holds the next monom in the polynom array
+	 * @param addIt iterator that points on this polynom 
+	 */
 	public void add(Polynom_able p1)
 	{
-         
-		/**	 * Add p1 to this Polynom
-		 * @param p1
-		 */
-		
-		Iterator <Monom> iteretor_p1 = p1.iteretor() ; 
+		Polynom_able pCopy = new Polynom();
+		pCopy = this.copy() ;
+		Iterator<Monom> addIt = p1.iteretor() ;
 		Monom mon1;
-		while(iteretor_p1.hasNext())
+		while(addIt.hasNext())
 		{
-	     mon1=iteretor_p1.next();
-	     p1.add(mon1);
+			mon1=addIt.next();
+			pCopy.add(mon1);
 		}
-		System.out.println(p1);	
+		System.out.println(pCopy); 
 	}
+
+	/**
+	 * Add m1 to this Polynom
+	 * @param m1 Monom that the function receive
+	 * @param equal - represent a boolean flag that says if the power of this monom and m1 monom
+	 * 
+	 */
+	public void add(Monom m1)
+	{
+		Polynom_able pCopy = new Polynom();
+		pCopy = this.copy() ;
+		Iterator <Monom> addIt = pCopy.iteretor();
+		boolean equal = false                    ;  
+		Monom mon                                ;
+		while(addIt.hasNext())
+		{
+			mon = addIt.next();
+			if(m1.get_power() == mon.get_power() )
+			{ 
+				equal = true ;
+				mon.add(m1);
+				break ;
+			}
+		}
+		if(equal == false)
+		{
+			poly.add(m1);
+		} 
+
+	}
+
+
+	/**
+	 * Subtract p1 from this Polynom using flipSign (private function)
+	 * @param p1 - Polynom_able variable type that the function reciving  
+	 * @param subIt - iterator that points on this polynom
+	 */
+
+	public void substract(Polynom_able p1)
+	{
+		Polynom_able pCopy = new Polynom() ;
+		pCopy = p1.copy() ;
+		Iterator<Monom> subIt = pCopy.iteretor() ;
+		Monom mon ;
+		flipSign(pCopy);
+		while(subIt.hasNext())
+		{
+			mon = subIt.next();
+			pCopy.add(mon);
+		}
+		System.out.println(pCopy.toString() );
+	}
+
+	
+	
+	/** * this function flip the p1 polynom signs
+	 * 
+	 * @param p1   - Polynom_able variable type that the function reciving 
+	 * @param fsIt - iterator that points on p1 polynom
+	 * @param nmon - represent a negative monom
+	 */
+	private void flipSign(Polynom_able p1)
+	{  
+		Iterator<Monom> fsIt = p1.iteretor() ;
+		Monom nmon = new Monom(-1,0) ;
+		while(fsIt.hasNext())
+		{
+			fsIt.next().multiplication(nmon) ;   
+		}
+	}
+
+	
 	
 	
 	/**
-	 * Add m1 to this Polynom
-	 * @param m1 Monom
-	 */
-	
-	public void add(Monom m1)
-	{
-		
-
-		Iterator <Monom> addIt = poly.iterator();
-		
-		boolean isThere = false                 ;		
-		Monom mon                               ;
-		
-			while(addIt.hasNext())
-			{
-				mon = addIt.next();
-				if(m1.get_power() == mon.get_power() )
-				{	
-					isThere = true ;
-					mon.add(m1);
-					break ;
-			    }
-								
-			}
-					
-			if(isThere == false)
-			{
-				poly.add(m1);
-			}
-	 }
-	
-	
-	
-	
-	public void substract(Polynom_able p1)
-	{
-		/**
-	 * Subtract p1 from this Polynom
-	 * @param p1
-	 */
-		Iterator<Monom> subIt = poly.iterator() ;
-		
-		flipSign(p1);
-		
-		while(subIt.hasNext())
-		{
-			p1.add(subIt.next());
-		}
-		
-		System.out.println(p1.toString() );
-	}
-	
-	
-	private void flipSign(Polynom_able p1)
-	{		
-		Iterator<Monom> fsIt = p1.iteretor() ;
-		Monom nmon = new Monom(-1,0) ;
-
-		while(fsIt.hasNext())
-		{
-			 fsIt.next().multiplication(nmon) ;			
-		}
-		
-	 }
-	
+ 		Multiply this Polynom by p1
+  		@param p1  - the polynom that will be used for multiplying
+	 **/
 	public void multiply(Polynom_able p1)
 	{
 		/*
-	  Multiply this Polynom by p1
-		  @param p1  */
-	 
-        Iterator<Monom>p1It = p1.iteretor();
+   Multiply this Polynom by p1
+    @param p1  */
+		Iterator<Monom>p1It = p1.iteretor();
 		Iterator<Monom> multIt = poly.iterator(); ;
-		
 		Polynom tmpPoly = new Polynom() ;
 		Monom p1Mon    = new Monom()    ;
 		Monom res = new Monom()         ;
 		Monom constMon = new Monom()    ;
-        while(p1It.hasNext())
+		while(p1It.hasNext())
 		{
-        	constMon = p1It.next() ;
-        	p1Mon = constMon       ;
-        	multIt = poly.iterator() ;
-        	while(multIt.hasNext())
+			constMon = p1It.next() ;
+			p1Mon = constMon       ;
+			multIt = poly.iterator() ;
+			while(multIt.hasNext())
 			{
 				res = p1Mon.multiplication(multIt.next()) ;
 				tmpPoly.add(res);
-				
-				
+
 			}
-			
 		}
-       System.out.println(tmpPoly.toString());
+		System.out.println(tmpPoly.toString());
 	}
+
+
 	
 	
-//	public boolean equals (Polynom_able p1)
+	/**
+	 * Test if this Polynom is logically equals to p1.
+	 * @param p1 - Polynom_able variable type that the function reciving 
+	 * @param p1It - iterator that points on p1 polynom
+	 * @param equalsIt - iterator that points on this polynom
+	 * @param mon_p1   - monom from p1 polynom
+	 * @param mon_this - monom from this polynom
+	 * @param co_this  - coefficien of this polynom
+	 * @param co_p1    - coefficien of p1 polynom
+	 * @param po_this  - power of this polynom
+	 * @param po_p1    - power of p1 polynom
+	 * @return true iff this polynom represents the same function ans p1
+	 * 
+	 */
+	public boolean equals (Polynom_able p1)
 	{
-		/**
-		 * Test if this Polynom is logically equals to p1.
-		 * @param p1
-		 * @return true iff this pulynom represents the same function ans p1
-		 */
-		
-		
-		//Iterator <Monom> P1It = p1.iteretor();
-		Monom_Comperator tmp = new Monom_Comperator() ;
-		
-	
-	
-	
+		Iterator <Monom> p1It     = p1.iteretor();
+		Iterator <Monom> equalsIt = poly.iterator();
+		Monom mon_this , mon_p1 ;
+		double co_this;
+		double co_p1  ;
+		int po_this   ;
+		int po_p1     ;
+
+		int p1_size       = 0 ;
+		int this_size = 0 ;
+
+		if(p1.isZero() && this.isZero())   {return true;  }
+
+		while(p1It.hasNext())
+		{
+			p1_size++ ;
+			p1It.next() ;
+
+		}
+		while(equalsIt.hasNext())
+		{
+			this_size++     ; 
+			equalsIt.next() ;
+		}
+
+		if(p1_size != this_size)          {return false ;}
+
+		p1It     = p1.iteretor();
+		equalsIt = poly.iterator();
+
+		while(equalsIt.hasNext())
+		{mon_this = equalsIt.next() ;
+		mon_p1    = p1It.next()     ;
+
+		co_this = mon_this.get_coefficient() ;
+		co_p1   = mon_p1.get_coefficient()   ;
+		po_this = mon_this.get_power()       ;
+		po_p1   = mon_p1.get_power()         ;
+
+		if(co_this != co_p1 )         {return false ; }
+		if(po_this != po_p1)          {return false ; }	   
+		}
+		return true ;
 	}
-	
-	public boolean isZero()
+
+
+
+
+	/**
+	 * Test if this is the Zero Polynom
+	 * @param check - boolean variable 
+	 * @return true/false if the polynom is zero or not
+	 */
+	public  boolean isZero()
 	{
-		/**
-		 * Test if this is the Zero Polynom
-		 * @return
-		 */
 		boolean check = true ;
 		Iterator<Monom> izIt = poly.iterator();
+
 		while(izIt.hasNext())
 		{
-			if(izIt.next().get_coefficient()!=0)
-			{
-				return false;
-			}
+			if(izIt.next().get_coefficient()!=0)       {return false;}
 		}
 		return check ;
 	}
+
+	/**
+	 * Compute Riemann's Integral over this Polynom starting from x0, till x1 using eps size steps,
+	 * see: https://en.wikipedia.org/wiki/Riemann_integral
+	 * @param x0 - first value on the X axis
+	 * @param x1 - second value on the X axis
+	 * @param eps small value for accuracy level 
+	 * @param res
+	 * @return the approximated area above the x-axis below this Polynom and between the [x0,x1] range.
+	 */
+	public double area(double x0,double x1, double eps)
+	{ 
+		double left=x0;
+		double sum=0;
+		double  n=(int)((x1-x0)*(f(x1)-f(x0)))/eps;
+		double dx=(x1-x0)/n;
+		for(int i=0;i<n;i++){
+			sum+=f(left)*dx;
+			left=+dx;
+		}
+		return 	Math.abs(sum) ;
+
+	}
+	 static int binlog( int bits ) // returns 0 for bits=0
+	{
+		int log = 0;
+		if( ( bits & 0xffff0000 ) != 0 ) { bits >>>= 16; log = 16; }
+		if( bits >= 256 ) { bits >>>= 8; log += 8; }
+		if( bits >= 16  ) { bits >>>= 4; log += 4; }
+		if( bits >= 4   ) { bits >>>= 2; log += 2; }
+		return log + ( bits >>> 1 );
+	}
+	/**
+	 * Compute a value x' (x0 <= x'<=x1) for with |f(x')| < eps
+	 * assuming (f(x0)*f(x1)<=0, returns f(x2) such that:
+	 * * (i) x0<=x2<=x2 && (ii) f(x2)<eps
+	 * @param smaller_val starting point
+	 * @param bigger_val end point
+	 * @param eps step (positive) value
+	 * @return
+	 */
+	public double root(double x0, double x1, double eps) 
+	{
+		double bigger_val  = Math.max( x0, x1 )       ;                //find the bigger  value between x0 to x1
+		double smaller_val = Math.min( x0, x1 )       ;                //find the smaller value between x0 to x1
+		double middle     = ( bigger_val + smaller_val) /2 ;           //initializing the variable "middle"
+		double n=(binlog((int)((bigger_val-smaller_val)/eps))+1);
+		if(this.f(x0)*this.f(x1) > 0)
+		{
+			System.out.println("f("+x0+")*f("+x1+")have to be a negetive number to use root function!!!");
+			return -1 ;
+		}
+		if(f(middle)==0){return middle;}
+		for(int i=0;i<n;i++)
+		{middle=(bigger_val+smaller_val)/2;
+			if(f(middle)>0)
+			{
+				if(f(bigger_val)>0)
+				{
+					bigger_val=middle;
+				
+				}
+					else 
+					{
+						smaller_val=middle;
+						
+					}
+				
+				}
+			if(f(middle)<0){
+				if(f(bigger_val)>0){
+					smaller_val=middle;
+				
+				}
+				else{bigger_val=middle;
+			}
+			}
+
+			}
+		return middle;
+
+		}
+
+
 	
-//	public double root(double x0, double x1, double eps)
-//	{
-//		/**
-//		 * Compute a value x' (x0 <= x'<=x1) for with |f(x')| < eps
-//		 * assuming (f(x0)*f(x1)<=0, returns f(x2) such that:
-//		 * *	(i) x0<=x2<=x2 && (ii) f(x2)<eps
-//		 * @param x0 starting point
-//		 * @param x1 end point
-//		 * @param eps step (positive) value
-//		 * @return
-//		 */
-//	}
-//	
-	
+
 	/**
 	 * create a deep copy of this Polynum
 	 * @return 
 	 */
-	
 	public Polynom_able copy()
 	{
 		Polynom copy = new Polynom()      ;
-		
-		
-		
+
 		Iterator  <Monom> firstIt   =  poly.iterator()      ;
-		
-		Monom mon                   ;
+		Monom mon = new Monom()                  ;
 		while( firstIt.hasNext() )
 		{
-			mon = firstIt.next() ;
-			
-			copy.add(mon)  ;	
-			           
+			mon = new Monom(firstIt.next()) ;
+			copy.add(mon)  ; 
 		}
-		
 		return copy ;
 	}
-	
-	
+
+
+
+
 	/**
-	 * Compute a new Polynom which is the derivative of this Polynom
-	 * @return
+	 *Compute a new Polynom which is the derivative of this Polynom
+	 *@param poly_c - holds a copy of this polynom
+	 *@param der_poly - the returned variable that holds the derivated polynom
+	 *@param polyIt = points on the poly_c polynom
+	 *@param monDer - holds the derivated monom
+	 *@return the derivated polynom
 	 */
-	
 	public Polynom_able derivative()
 	{
-		Polynom p = this ;
-		p = Pderivative(p);
-		return p ;
-	}
-	
-	
-	private Polynom Pderivative(Polynom p)	
-	{
-		Iterator<Monom> derIt = p.iteretor();
-		while(derIt.hasNext())
-		{
-			derIt.next().derivative();
-		}
-		return p ;
-	}
-	
-			 public double area(double x0,double x1, double eps)
-			{
-				/**
-				 * Compute Riemann's Integral over this Polynom starting from x0, till x1 using eps size steps,
-				 * see: https://en.wikipedia.org/wiki/Riemann_integral
-				 * @return the approximated area above the x-axis below this Polynom and between the [x0,x1] range.
-				 */
-			
-				if(x0==x1)
-				{
-					return 0;
-				}
-				double minNum = Math.min(x0, x1);
-				double maxNum = Math.max(x0, x1);
-				double deltaX = Math.abs(maxNum - minNum)   ;
-		
-				double res = 0 ;
-				for(double i = minNum ; i <= maxNum ; i+=eps )
-				{
-					if(this.f(i)<=0)
-					{
-						
-					}
-					else
-					{
-						res += this.f(i)*deltaX ;
-					
-					}
-					
-				}
-			
-				return res;
-			}
-			
-		
-		
+		Polynom_able poly_c =new Polynom()        ;
+		Polynom_able der_poly =new Polynom()      ;
+		poly_c=this.copy()                        ;
+		Iterator<Monom> polyIt = poly_c.iteretor();
 
-	 double f(double x)
-	{
-		double result=0;
-		Iterator<Monom>itF= poly.iterator();
-		while(itF.hasNext())
+		Monom monDer = new Monom() ;
+
+		while(polyIt.hasNext())
 		{
-			result+=itF.next().f(x);
+			monDer = polyIt.next();
+
+			der_poly.add(Pderivative(monDer));
 		}
-		return result;
+		this.polyIt = poly.iterator() ;
+		System.out.println("The derivative of " + this.toString() + " is : " + der_poly.toString());
+		return der_poly ;
 	}
-	public Iterator <Monom> iteretor()	
+	/**
+	 * 
+	 * This function return a derivated monom using the function derivated in Monom class
+	 * @param monDer - holds the derivated monom
+	 * @return a derivated monom
+	 */
+	private Monom Pderivative(Monom monDer) 
 	{
-		Iterator<Monom> it = poly.iterator() ; 
-		
+		monDer.derivative();
+		return monDer ;
+	}
+
+
+	public Iterator <Monom> iteretor() 
+	{
+		Iterator<Monom> it = poly.iterator() ;
 		return it ;
 	}
-		
-@Override
+
+	@Override
 	public String toString() 
 	{
-	String str = "" ;
-	double sign  ;
-	
-	Iterator <Monom> tsIt  = poly.iterator()  ;
-	Iterator <Monom> signIt  = poly.iterator()  ;
-
-	while(tsIt.hasNext())
-	{
-		sign = signIt.next().get_coefficient() ;
-		if(sign > 0 )
-			str += "+";
-		str += tsIt.next().toString()  ;
-	}
+		String str = "" ;
+		double sign  ;
+		Iterator <Monom> tsIt  = poly.iterator()  ;
+		Iterator <Monom> signIt  = poly.iterator()  ;
+		while(tsIt.hasNext())
+		{
+			sign = signIt.next().get_coefficient() ;
+			if(sign > 0 )
+				str += "+";
+			str += tsIt.next().toString()  ;
+		}
 		return str ;
 	}
+	private double f(double x) 
+	{
+		Iterator<Monom> fIt = poly.iterator();
+		double poly_res = 0 ;
+		while(fIt.hasNext())
+		{
+			poly_res += fIt.next().f(x);
+		}
+		return poly_res ;
+	}
 
-public int compare(Monom mon1 , Monom mon2)
-{
-	if(mon1.get_power() > mon2.get_power())      {return  1; }
-	
-	if(mon1.get_power() < mon2.get_power())		 {return -1; }
-	
-	return  0; 
-}
 
 	/* **************************************   MAIN ********************** */
 	public static void main(String[] args) 
 	{
-		Monom mon1 = new Monom(2,1);
-		Monom mon2 = new Monom(-3.2,4);
-		Monom mon3 = new Monom(-2,0);
-		Monom mon4 = new Monom(7,8);
-//		Monom mon5 = new Monom(9,10);
-//		Monom mon6 = new Monom(6,10);
-//		Monom mon7 = new Monom(8,12);
-		
-		
-		Polynom poly1 = new Polynom() ;
-		Polynom poly2 = new Polynom() ;
-		
-		poly1.add(mon1); 		
-		poly1.add(mon3);
-		poly2.add(mon2); 		 
-		poly2.add(mon4);
-//		poly1.add(mon5);
-//		poly2.add(mon6);
-//		poly2.add(mon7);
-//		
-		
-		System.out.println(poly1.toString());
-		System.out.println(poly2.toString());
+		Polynom poly1 = new Polynom("2x-2") ;
+		Polynom poly2 = new Polynom("x^3+3x") ;
+		Monom mon = new Monom(2,3);
+		System.out.println(poly1.equals(poly2));
+		tester test = new tester( );
+		test.isZero_Tester(poly1)              ;
 
-System.out.println("**************************");
-		System.out.println("is Zero function : " + poly1.isZero());
-		System.out.println("**************************");
+		
 
-		System.out.println("mult : ");
-		poly1.multiply(poly2);
-		
-		System.out.println("*********************************");
+		test.addPolynomTester(poly1, poly2, "2x^3+6x");
+		test.multiply_P_Tester(poly1, poly2) ;
+		test.addMonomTester(poly1, mon);
+		test.substract_P_Tester(poly1, poly2); 
+		test.equals_Tester(poly1, poly2)     ;
+		test.copy_Tester(poly1);
+		test.derivative_Tester(poly1);
+		System.out.println("ROOT");
+		test.area_Tester(poly1, 0, 2, 0.01);
+		test.root_Tester(poly1,0 ,2 ,0.001 );
+		poly1.area(0, 4, 0.001);
 
-	System.out.println(poly1.toString());
-	System.out.println();
-	System.out.println(poly1.area(0,4,0.01));
-		System.out.println("**************derivative");
-		System.out.println(poly1.derivative());
-		System.out.println(poly1.toString());
-		
-		
 	}
 }
