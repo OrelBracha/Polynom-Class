@@ -19,8 +19,8 @@ public class Monom implements function{
 	}
 	public Monom()
 	{
-		this.set_coefficient(0);
-		this.set_power(0);
+		this.set_coefficient((int)0);
+		this.set_power((int)0);
 	}
 	public Monom(Monom ot) 
 	{	
@@ -35,10 +35,12 @@ public class Monom implements function{
       x *= this._coefficient           ;
       return x                         ;
 	}
-	public double get_coefficient() {
+	public double get_coefficient() 
+	{
 		return _coefficient;
 	}
-	public int get_power() {
+	public int get_power() 
+	{
 		return _power;
 	}
 	
@@ -107,9 +109,9 @@ public class Monom implements function{
 	public Monom multiplication (Monom mon )
 	{
 		Monom res = new Monom() ;
-		res._power =  this._power + mon._power             ;
-		res._coefficient = this._coefficient  *   mon._coefficient         ;
-		return res ;                                    
+		this._power += mon._power             ;
+		this._coefficient  *=   mon._coefficient         ;
+		return this ;                                    
 	}
 	
 	public Monom add(Monom mon)
@@ -119,9 +121,9 @@ public class Monom implements function{
 			System.out.println("The powers are different so  this is not a Monom adding!!! ");
 		}
 		
-		Monom mon_res = this ;
-		mon_res._coefficient = this._coefficient + mon._coefficient; 
-		return mon_res;
+		
+		this._coefficient += mon._coefficient; 
+		return this;
 	}
 	
 	public Monom substruct(Monom mon)

@@ -1,11 +1,15 @@
 package myMath;
 
-public class tester 
+public class Tester 
 {
-	public tester() {
+	public Tester() {
 	// TODO Auto-generated constructor stub
 }
-	
+	public void addMonomTester(Monom mon1 , Monom mon2)
+	{
+		System.out.println("*****In addMonomTester : ******");
+		mon1.add(mon2);
+	}
 	public void addPolynomTester(Polynom this_p , Polynom_able p1 , String polycheck )
 	{
 		System.out.println("*****In addPolynomTester : ******");
@@ -66,7 +70,7 @@ public class tester
 	{
 		System.out.println();
 		System.out.println("*****In area_Tester******");
-		System.out.println(this_p.area(x0, x1, eps));
+		this_p.area(x0, x1, eps);
 	}
 	public void root_Tester(Polynom this_p  ,double x0, double x1, double eps)
 	{
